@@ -8,6 +8,9 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
            role="grid" style="width: 100%;">
       <thead>
         <tr role="row">
+          <th class="select" (click)="selectAll()" *ngIf="_config.selecting">
+            <i class="fa fa-check"></i>
+          </th>
           <th *ngFor="let column of columns" [ngTableSorting]="config" [column]="column" 
               (sortChanged)="onChangeTable($event)" ngClass="{{column.className || ''}}">
             {{column.title}}
@@ -18,6 +21,8 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       </thead>
       <tbody>
       <tr *ngIf="showFilterRow">
+        <th *ngIf="_config.selecting">
+        </th>
         <td *ngFor="let column of columns">
           <input *ngIf="column.filtering" placeholder="{{column.filtering.placeholder}}"
                  [ngTableFiltering]="column.filtering"
@@ -26,12 +31,16 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
                  (tableChanged)="onChangeTable(config)"/>
         </td>
       </tr>
-        <tr *ngFor="let row of rows">
+        <tr [ngClass]="{'active': _rowSelected.indexOf(row) != -1 }" *ngFor="let row of rows" (click)="selectedRowEvent(row)">
+          <td *ngIf="_config.selecting">
+            <i *ngIf="_rowSelected.indexOf(row) != -1" class="fa fa-check"></i>
+          </td>
           <td (click)="cellClick(row, column.name)" *ngFor="let column of columns" [innerHtml]="sanitize(getData(row, column.name))"></td>
         </tr>
       </tbody>
     </table>
-  `
+  `,
+  styles: ['th.select { padding: 10px; }']
 })
 export class NgTableComponent {
   // Table values
@@ -51,6 +60,7 @@ export class NgTableComponent {
   // Outputs (Events)
   @Output() public tableChanged:EventEmitter<any> = new EventEmitter();
   @Output() public cellClicked:EventEmitter<any> = new EventEmitter();
+  @Output() public rowSelected:EventEmitter<any> = new EventEmitter();
 
   public showFilterRow:Boolean = false;
 
@@ -75,6 +85,7 @@ export class NgTableComponent {
 
   private _columns:Array<any> = [];
   private _config:any = {};
+  private _rowSelected:Array<any> = [];
 
   public constructor(private sanitizer:DomSanitizer) {
   }
@@ -119,4 +130,37 @@ export class NgTableComponent {
   public cellClick(row:any, column:any):void {
     this.cellClicked.emit({row, column});
   }
+
+
+  public selectedRow(row:any):void{
+    let indexRow = this._rowSelected.indexOf(row);
+    if(indexRow == -1){
+      this._rowSelected.push(row);
+    }
+    else{
+      this._rowSelected.splice(indexRow,1);
+    }
+  }
+
+
+  public selectAll():void {
+    if(this._rowSelected.length == this.rows.length){
+              this._rowSelected = [];
+    }
+    else{
+        this._rowSelected = [];
+        this.rows.forEach((row: any) => {
+            this._rowSelected.push(row);
+        });
+    }
+    let rowSelected = this._rowSelected;
+    this.rowSelected.emit({rowSelected});
+  }
+
+  public selectedRowEvent(row:any):void {
+    this.selectedRow(row);
+    let rowSelected = this._rowSelected;
+    this.rowSelected.emit({rowSelected});
+  }
+  
 }

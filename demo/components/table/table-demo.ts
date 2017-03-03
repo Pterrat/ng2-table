@@ -30,10 +30,11 @@ export class TableDemoComponent implements OnInit {
   public length:number = 0;
 
   public config:any = {
+    selecting:true,
     paging: true,
     sorting: {columns: this.columns},
     filtering: {filterString: ''},
-    className: ['table-striped', 'table-bordered']
+    className: ['table-striped','table-hover', 'table-bordered']
   };
 
   private data:Array<any> = TableData;
@@ -135,6 +136,10 @@ export class TableDemoComponent implements OnInit {
   }
 
   public onCellClick(data: any): any {
+    console.log(data);
+  }
+
+  public onRowSelected(data: any):any{
     console.log(data);
   }
 }
